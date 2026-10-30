@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from math import isfinite
 from urllib.parse import urlsplit
 from src.infrastructure.configuration.database import environment
+from src.infrastructure.configuration.rag import RagSettings
 
 
 def validar_conexion_ollama(base_url, username, password):
@@ -31,6 +32,7 @@ class Settings:
     ollama_timeout_seconds: float = 300.0
     ollama_username: str | None = field(default=None, repr=False)
     ollama_password: str | None = field(default=None, repr=False)
+    rag: RagSettings = field(default_factory=RagSettings)
 
     def __post_init__(self):
         if any("*" in origin for origin in self.cors_origins):
@@ -62,4 +64,5 @@ class Settings:
                    ollama_model=values.get("NAXJI_OLLAMA_MODEL", "qwen2.5:7b"),
                    ollama_timeout_seconds=timeout,
                    ollama_username=values.get("NAXJI_OLLAMA_USERNAME") or None,
-                   ollama_password=values.get("NAXJI_OLLAMA_PASSWORD") or None)
+                   ollama_password=values.get("NAXJI_OLLAMA_PASSWORD") or None,
+                   rag=RagSettings.from_values(values))

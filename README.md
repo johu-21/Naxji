@@ -1,4 +1,20 @@
-# NAXJI — Copilot Municipal: backend PMV1
+# NAXJI — Copilot Municipal: PMV1 + PMV2 documental/RAG
+
+PMV2 implementa biblioteca autenticada `/documentos`, archivos privados, extracción
+PDF/DOCX/TXT, embeddings locales `bge-m3:567m`, recuperación PostgreSQL + pgvector
+y citas con snapshots por versión. En el paso 3 de Nuevo informe active
+**Elaborar con documentos autorizados**. Los cuatro pasos, edición y Word piloto
+se conservan. La activación externa permanece deshabilitada por defecto.
+
+- [Implementación, permisos y contratos PMV2](docs/PMV2_IMPLEMENTACION.md).
+- [Pruebas, métricas y límites de la validación](docs/PMV2_PRUEBAS.md).
+- [Instalación y activación explícita](docs/PMV2_GUIA_EJECUCION.md).
+- [Integración en Leonardo-2-1 y pruebas locales del 30/10/2026](docs/INTEGRACION_UPSTREAM_20261030.md).
+
+No se aplicaron migraciones ni se desplegó sobre Supabase compartido. Las pruebas
+reales usan PostgreSQL/pgvector desechable y Ollama local; Auth y Storage de ese
+recorrido son dobles. Falta validar el bucket privado y los permisos del entorno
+institucional, además de la revisión humana de pertinencia de citas.
 
 API FastAPI con arquitectura hexagonal, React, PostgreSQL y Supabase Auth.
 Permite crear una solicitud, confirmar/corregir contexto, completar una plantilla,
@@ -6,6 +22,15 @@ generar un borrador y guardar ediciones como versiones. El predictor ejecuta RF-
 con correspondencias de catálogo; el generador de borradores usa **Ollama local**
 con `qwen2.5:7b` y las secciones de la plantilla seleccionada.
 La plantilla técnica piloto es demostrativa, no un formato municipal aprobado.
+
+**Identificación del predictor:** RF-IA-01 es el nombre histórico del requerimiento
+y de la versión de los artefactos. Los archivos incluidos contienen
+`LogisticRegression` para tipo y área, y `OneVsRestClassifier[LogisticRegression]`
+para temas normativos; no un Random Forest. Las nuevas respuestas identifican el
+modelo como `SKLEARN_IA_01` y exponen `algoritmos`; las predicciones históricas
+conservan sus metadatos. La confianza por entrada no es una métrica de precisión.
+No se incluye un conjunto etiquetado independiente para medir rendimiento.
+Véase la [evaluación formativa y sus límites](docs/AUDITORIA_FORMATIVA.md).
 
 Estado y evidencias: [catálogos PMV1](docs/IMPLEMENTACION_CATALOGOS_PMV1.md) y
 [autenticación/persistencia](docs/VERIFICACION_SUPABASE.md).
@@ -17,8 +42,7 @@ Requiere Python 3.11 o superior. Desde la raíz del repositorio:
 ```powershell
 # Solo si el entorno todavía no existe:
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pip install -r requirements-export.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-pmv2.txt
 $env:NAXJI_PERSISTENCE_MODE = 'postgres'
 $env:NAXJI_AUTH_MODE = 'supabase'
 $env:NAXJI_AUTH_COOKIE_SECURE = 'true' # Obligatorio para SameSite=None
@@ -69,7 +93,9 @@ automática por mock cuando falla el servicio.
 Los datos ingresados sirven para redactar, no para modificar las reglas del modelo.
 Sin resultados de inspección, análisis y conclusiones deben quedar pendientes de
 verificación. Las normas aceptadas se transmiten por código y título de catálogo;
-no son citas jurídicas verificadas y no se recupera su texto. Aún no hay RAG.
+no son citas jurídicas verificadas. Con PMV2 activado y documentos procesados,
+RAG recupera texto autorizado; seleccionar una norma del catálogo por sí solo
+no recupera su contenido.
 El borrador requiere revisión humana: un esquema válido no demuestra veracidad.
 
 Las migraciones del [paso 3](docs/paso3-estructura-borradores.md) deben estar ya
@@ -204,7 +230,8 @@ aunque se escriban notas. Sin hechos, Ollama recibe un esquema que exige
 Las instrucciones distinguen datos no aportados de actividades no realizadas;
 las conclusiones y recomendaciones las propone Ollama a partir de la evidencia,
 no se solicitan previamente al funcionario. Un prefijo no prueba la verdad de
-una oración: se mantiene la revisión humana y no hay RAG ni verificación jurídica.
+una oración: se mantiene la revisión humana. El RAG opcional aporta referencias
+documentales; no verifica jurídicamente el borrador ni acredita inspecciones.
 
 **Estado verificado de esta base y semilla corregida:**
 

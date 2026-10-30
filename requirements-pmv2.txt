@@ -1,0 +1,2 @@
+# Alias compatible con las instrucciones PMV2; Railway instala requirements.txt.
+-r requirements.txt
